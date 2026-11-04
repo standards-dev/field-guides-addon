@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: Standards.gg Field Guides - Warrior data
+## Notes: Warrior guide data for Standards.gg Field Guides. Loaded only when you open a Warrior guide.
+## Author: Standards.gg
+## Version: 1.5.1
+## LoadOnDemand: 1
+## Dependencies: StandardsGuides
+## X-Credit: Source: Standards.gg Field Guides - https://standards.gg/field-guides/
+
+Data.lua

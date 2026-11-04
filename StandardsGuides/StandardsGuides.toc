@@ -1,0 +1,18 @@
+## Interface: 16001
+## Title: Standards.gg Field Guides
+## Notes: The Standards.gg WoW Forever class field guides in game: talents (with one-click apply), leveling, stats, rotation, macros, dungeon loot atlas, professions, crafts and quest gear. /sgg
+## Author: Standards.gg
+## Version: 1.5.1
+## SavedVariables: StandardsGuidesDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## X-Credit: Source: Standards.gg Field Guides - https://standards.gg/field-guides/
+
+HubData.lua
+Core.lua
+Widgets.lua
+Icons.lua
+Items.lua
+Atlas.lua
+Talents.lua
+Guide.lua
+Hub.lua

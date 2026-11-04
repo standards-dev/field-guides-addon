@@ -1,0 +1,24 @@
+Standards.gg Field Guides addon
+Copyright (c) 2026 Standards.gg. All rights reserved.
+
+You may download this addon and use it in World of Warcraft for personal use.
+
+No other rights are granted. Without written permission from Standards.gg you may not:
+- modify the addon, or
+- redistribute it or derivative works of it, or
+- republish the guide content it contains.
+
+Linking to this repository is welcome.
+
+Anyone who collects content or data from these guides must credit Standards.gg and link to
+https://standards.gg/field-guides/ (or the guide page they used) in any content they create with it.
+This applies to text, talent builds, stat priorities, item and loot lists, screenshots and recordings,
+datasets, and use in AI training or AI-generated answers.
+
+Credit line: Source: Standards.gg Field Guides - https://standards.gg/field-guides/
+
+Exceptions:
+- The bundled fonts in StandardsGuides/Fonts (Cinzel, Inter) are licensed under the SIL Open Font
+  License 1.1. See OFL-Cinzel.txt and OFL-Inter.txt.
+- World of Warcraft and the class artwork (World of Warcraft Fan Site Kit) are property of
+  Blizzard Entertainment, Inc.
