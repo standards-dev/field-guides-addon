@@ -227,6 +227,19 @@ function SGG:RegisterClassData(cls)
 	ns.Data[cls.key] = cls
 end
 
+-- The class's Forever talent trees, bundled with its data pack (Trees.lua): the guide draws them when the game
+-- is not sharing the trees. Icons are stored as file names under Interface\Icons.
+ns.StaticTrees = {}
+function SGG:RegisterClassTrees(key, tabs)
+	for _, t in ipairs(tabs) do
+		for i, x in ipairs(t.talents) do
+			x.i = i
+			if x.icon and not x.icon:find("\\", 1, true) then x.icon = "Interface\\Icons\\" .. x.icon end
+		end
+	end
+	ns.StaticTrees[key] = { tabs = tabs, bundled = true }
+end
+
 function ns.GetClassData(key)
 	if ns.Data[key] then return ns.Data[key] end
 	local info
@@ -447,10 +460,12 @@ SlashCmdList.STANDARDSGUIDES = function(msg)
 			for _, c in ipairs(ns.Hub.classes) do kb = kb + (GetAddOnMemoryUsage("StandardsGuides_" .. c.name) or 0) end
 			ns.Print(("Memory: core %.0f KB, loaded class packs %.0f KB."):format(GetAddOnMemoryUsage(ADDON) or 0, kb))
 		end
+	elseif cmd == "talents" then
+		if ns.TalentReport then ns.TalentReport() end
 	elseif cmd == "help" then
 		ns.Print("/sgg - open or close the hub   /sgg me - your class guide   /sgg <class> [spec] - open a guide")
 		ns.Print("/sgg scale 0.5-1.5   /sgg minimap - toggle the minimap button   /sgg reset - recentre the window")
-		ns.Print("/sgg perf - render time, shown widgets and memory")
+		ns.Print("/sgg perf - render time, shown widgets and memory   /sgg talents - what the game reports about your talent trees")
 	elseif cmd and ns.Hub then
 		for _, c in ipairs(ns.Hub.classes) do
 			if c.key == cmd then

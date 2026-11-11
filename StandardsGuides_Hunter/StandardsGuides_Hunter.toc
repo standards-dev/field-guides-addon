@@ -2,9 +2,10 @@
 ## Title: Standards.gg Field Guides - Hunter data
 ## Notes: Hunter guide data for Standards.gg Field Guides. Loaded only when you open a Hunter guide.
 ## Author: Standards.gg
-## Version: 1.5.1
+## Version: 1.15.2
 ## LoadOnDemand: 1
 ## Dependencies: StandardsGuides
 ## X-Credit: Source: Standards.gg Field Guides - https://standards.gg/field-guides/
 
 Data.lua
+Trees.lua

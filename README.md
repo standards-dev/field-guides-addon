@@ -1,11 +1,11 @@
 # Standards.gg Field Guides — WoW Forever addon
 
-The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.5.1) inside World of Warcraft: Forever.
+The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.15.2) inside World of Warcraft: Forever.
 All nine classes and 28 specializations, with talent builds, leveling routes, stat priorities, rotations, macros, the dungeon loot atlas, professions, crafts and quest gear.
 
 ## Download
 
-Get **`StandardsGuides-Forever-1.5.1-addon.zip`** from the [Releases](../../releases) page.
+Get **`StandardsGuides-Forever-1.15.2-addon.zip`** from the [Releases](../../releases) page.
 
 ## Install
 
@@ -25,6 +25,7 @@ The guide content is written for Forever, so some talents and items will not exi
 | `/sgg` | Open or close the field guides hub |
 | `/sgg me` | Open your class guide |
 | `/sgg mage fire` | Open a specific guide |
+| `/sgg talents` | Show what the game reports for your talent trees (useful if a tree will not load) |
 | `/sgg perf` | Show render time, shown widgets and memory |
 | `/sgg scale 0.8` | Window scale (0.5–1.5) |
 | `/sgg minimap` | Show or hide the minimap button |
@@ -37,6 +38,7 @@ Minimap button: left-click opens the hub, right-click opens your class guide.
 - **Hub and guides:** the site's layout in the WoW UI colour palette, with section navigation and search.
 - **Talents:**
   - Your class's trees come straight from the game, with a level preview.
+  - If the game has not shared a class's trees yet (a new character is still loading, or another class than yours), the guide draws the Forever trees bundled with that class pack and refreshes to the game's own trees once they load.
   - **Apply build** learns your unspent points in the guide's leveling order. It asks first, runs out of combat only, and works on your own class.
 - **Dungeon loot atlas, crafts and quest gear:**
   - Filters and search.

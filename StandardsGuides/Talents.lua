@@ -4,25 +4,42 @@ local _, ns = ...
 local C = ns.C
 
 -- ------------------------------------------------------------------ client talent data
+-- Every call into the game goes through Call: a missing or erroring talent API must never break a guide page.
+local function Call(f, ...)
+	if type(f) ~= "function" then return end
+	local r = { pcall(f, ...) }
+	if r[1] then return unpack(r, 2) end
+end
+
+local function Num(v) return tonumber(v) or 0 end
+
 local function TabInfo(tab)
-	local a, b, c, d, e, f = GetTalentTabInfo(tab)
+	local a, b, c, d, e, f = Call(GetTalentTabInfo, tab)
 	if type(a) == "number" and type(b) == "string" then return b, d, e, f end -- id, name, desc, icon, points, background
 	return a, b, c, d -- name, icon, pointsSpent, background file
 end
 
+local function PlayerClassKey()
+	local _, token = UnitClass("player")
+	return token and token:lower()
+end
+
+-- The trees the game shares for the player's own class. Right after a character is created or logged in the
+-- client can still be loading them, so this may return nothing or a partial tree: see TreeComplete.
 local function ReadTree()
-	local n = GetNumTalentTabs and GetNumTalentTabs() or 0
+	local n = Num(Call(GetNumTalentTabs))
 	if n == 0 then return nil end
+	local getPre = GetTalentPrereqs or GetTalentPrerequisites
 	local tree = { tabs = {} }
 	for tab = 1, n do
 		local name, _, _, bg = TabInfo(tab)
 		local t = { name = name, bg = bg, talents = {} }
-		for i = 1, (GetNumTalents(tab) or 0) do
-			local tname, icon, tier, col, rank, max = GetTalentInfo(tab, i)
+		for i = 1, Num(Call(GetNumTalents, tab)) do
+			local tname, icon, tier, col, rank, max = Call(GetTalentInfo, tab, i)
 			if tname then
 				local pre
-				if GetTalentPrereqs then
-					local pt, pc = GetTalentPrereqs(tab, i)
+				if getPre then
+					local pt, pc = Call(getPre, tab, i)
 					if pt then pre = { pt, pc } end
 				end
 				t.talents[#t.talents + 1] = { n = tname, icon = icon, tier = tier, col = col, max = max, i = i, pre = pre, cur = rank }
@@ -33,10 +50,49 @@ local function ReadTree()
 	return tree
 end
 
+-- Talents per tree in the Forever trees (the bundled data, Trees.lua of each class pack). A read with far fewer
+-- talents than this is a client that has not finished loading, not a real tree.
+local EXPECT = {
+	druid = { 16, 20, 16 }, hunter = { 16, 16, 18 }, mage = { 18, 17, 18 }, paladin = { 17, 17, 17 },
+	priest = { 18, 17, 17 }, rogue = { 17, 19, 18 }, shaman = { 16, 18, 16 }, warlock = { 17, 19, 16 },
+	warrior = { 17, 18, 18 },
+}
+
+local function StaticTree(key)
+	return key and ns.StaticTrees and ns.StaticTrees[key]
+end
+
+-- At least a couple of trees, each with talents in it: enough to draw and to learn points from.
+local function TreeUsable(tree)
+	if not tree or type(tree.tabs) ~= "table" or #tree.tabs < 2 then return false end
+	for _, t in ipairs(tree.tabs) do
+		if #t.talents == 0 then return false end
+	end
+	return true
+end
+
+-- A whole tree: every tab named and holding most of its talents.
+local function TreeComplete(tree, key)
+	if not TreeUsable(tree) then return false end
+	local want = EXPECT[key]
+	for tab, t in ipairs(tree.tabs) do
+		if not t.name or t.name == "" then return false end
+		local need = want and want[tab] and math.floor(want[tab] * 0.6) or 6
+		if #t.talents < need then return false end
+	end
+	return true
+end
+
+local runner = { busy = false }
+local retry = { tries = 0, pending = false }
+
+-- Save the player's trees for the guide to use when the game is not sharing them (and to show on other
+-- characters). Only a whole tree is saved, so a half-loaded read can never replace a good copy.
 function ns.CacheTalentTrees()
+	local key = PlayerClassKey()
 	local _, token = UnitClass("player")
 	local tree = ReadTree()
-	if tree and ns.db then
+	if tree and ns.db and token and TreeComplete(tree, key) then
 		local saved = { tabs = {} }
 		for tab, t in ipairs(tree.tabs) do
 			local s = { name = t.name, bg = t.bg, talents = {} }
@@ -50,14 +106,60 @@ function ns.CacheTalentTrees()
 	return tree
 end
 
-local function PlayerClassKey()
-	local _, token = UnitClass("player")
-	return token and token:lower()
+-- Re-read the trees, and redraw an open guide of the player's class when what it can show has changed.
+local function Refresh(force)
+	local key = PlayerClassKey()
+	local tree = ns.CacheTalentTrees()
+	local ok = TreeComplete(tree, key) and true or false
+	if force or ok ~= retry.live then
+		retry.live = ok
+		local g = ns.main and ns.main.guide
+		if g and g:IsShown() and g.cls and g.cls.key == key then g:RerenderSoon() end
+	end
+	return ok
 end
 
+-- The game can take a few seconds to hand over a new character's trees: look again a few times.
+local RETRY_DELAYS = { 1, 3, 6, 12, 25 }
+function ns.RetryTrees()
+	if retry.pending or not C_Timer or not C_Timer.After then return end
+	local d = RETRY_DELAYS[retry.tries + 1]
+	if not d then return end
+	retry.pending = true
+	C_Timer.After(d, function()
+		retry.pending = false
+		retry.tries = retry.tries + 1
+		if runner.busy then return end
+		if Refresh(false) then retry.tries = 0 else ns.RetryTrees() end
+	end)
+end
+
+-- Which trees to draw: the game's own when it has shared them whole, else the copy saved from the game, else the
+-- Forever trees bundled with the class pack. Returns the tree and where it came from.
+local function ResolveTree(cls, isMine)
+	local key = cls.key
+	local live
+	if isMine then
+		live = ReadTree()
+		if TreeComplete(live, key) then return live, "live" end
+		ns.RetryTrees()
+	end
+	local saved = ns.db and ns.db.trees and ns.db.trees[cls.token]
+	if TreeComplete(saved, key) then return saved, "saved" end
+	local bundled = StaticTree(key)
+	if bundled then return bundled, "bundled" end
+	if TreeUsable(live) then return live, "live" end
+	return nil, "none"
+end
+ns.ResolveTree = ResolveTree
+
 -- ------------------------------------------------------------------ guide ranks
+-- The Hunter guide names its trees BM, MM and SV.
+local TREE_ALIAS = { bm = "beastmastery", mm = "marksmanship", sv = "survival" }
+
 local function TreeIndex(tree, name)
 	local k = ns.Key(name)
+	k = TREE_ALIAS[k] or k
 	for tab, t in ipairs(tree.tabs) do if ns.Key(t.name) == k then return tab end end
 	for tab, t in ipairs(tree.tabs) do
 		local tk = ns.Key(t.name)
@@ -131,9 +233,8 @@ local function BuildSteps(spec, tree)
 	return steps, miss
 end
 
-local runner = { busy = false }
 local function CurrentRank(tab, i)
-	local _, _, _, _, rank = GetTalentInfo(tab, i)
+	local _, _, _, _, rank = Call(GetTalentInfo, tab, i)
 	return rank or 0
 end
 
@@ -194,7 +295,11 @@ function ns.ApplyBuild(cls, spec)
 	if InCombatLockdown() then return ns.Print("Talents cannot be learned in combat.") end
 	if not LearnTalent then return ns.Print("This client does not let addons learn talents. Use the tree and point order as a checklist.") end
 	local tree = ReadTree()
-	if not tree then return ns.Print("Your talent trees are not available yet. Try again in a moment.") end
+	if not TreeUsable(tree) then
+		retry.tries = 0
+		ns.RetryTrees()
+		return ns.Print("The game has not shared your talent trees yet. Try again in a moment (/sgg talents shows what it reports).")
+	end
 	local free = FreePoints()
 	if free <= 0 then return ns.Print("You have no unspent talent points.") end
 	local steps, missing = BuildSteps(spec, tree)
@@ -225,6 +330,17 @@ local function TalentEnter(self)
 	local _, spellId = ns.SpellIcon(d.x.n)
 	if d.live and GameTooltip.SetTalent then
 		GameTooltip:SetTalent(d.tab, d.x.i)
+	elseif d.x.d and #d.x.d > 0 then
+		-- bundled Forever trees carry the talent's own description for each rank
+		local ranks = #d.x.d
+		local shown = math.max(1, math.min(ranks, d.gr > 0 and d.gr or 1))
+		GameTooltip:AddLine(d.x.n, 1, 1, 1)
+		GameTooltip:AddLine(("Maximum rank %d"):format(d.x.max or ranks), C.muted[1], C.muted[2], C.muted[3])
+		GameTooltip:AddLine(" ")
+		if ranks > 1 then
+			GameTooltip:AddLine(("Rank %d/%d"):format(shown, ranks), C.gold[1], C.gold[2], C.gold[3])
+		end
+		GameTooltip:AddLine(d.x.d[shown], C.text[1], C.text[2], C.text[3], true)
 	elseif spellId and GameTooltip.SetSpellByID and pcall(GameTooltip.SetSpellByID, GameTooltip, spellId) then
 		-- another class's talent: the client's spell tooltip for it
 	else
@@ -246,7 +362,8 @@ function ns.RenderTalents(lay, g, x, y, w)
 	local y0 = y
 	local cls, spec = g.cls, g.spec
 	local isMine = PlayerClassKey() == cls.key
-	local tree = isMine and ReadTree() or (ns.db.trees[cls.token])
+	local tree, source = ResolveTree(cls, isMine)
+	local live = source == "live"
 	g.previewLevel = g.previewLevel or 60
 	local L = g.previewLevel
 
@@ -269,8 +386,13 @@ function ns.RenderTalents(lay, g, x, y, w)
 	y = y + 32
 
 	if not tree then
-		local _, h = lay:Text(ns.F.body, ("The %s talent trees appear here after you log in a %s once (the game only shares a class's trees with that class). The selected ranks and point order are listed below.")
-			:format(cls.name, cls.name), x, y, w, C.muted)
+		local msg
+		if isMine then
+			msg = "The game has not shared your talent trees yet. This page fills in by itself as soon as it does (/sgg talents shows what the game reports). The selected ranks and point order are listed below."
+		else
+			msg = ("The %s talent trees are not available in this copy of the addon. The selected ranks and point order are listed below."):format(cls.name)
+		end
+		local _, h = lay:Text(ns.F.body, msg, x, y, w, C.muted)
 		return y - y0 + h + 12
 	end
 
@@ -326,10 +448,10 @@ function ns.RenderTalents(lay, g, x, y, w)
 			if gr > 0 then
 				b.count:SetText(gr .. "/" .. (x2.max or "?"))
 				b.count:SetTextColor(full and C.gold[1] or C.green[1], full and C.gold[2] or C.green[2], full and C.gold[3] or C.green[3])
-			elseif isMine and (x2.cur or 0) > 0 then
+			elseif live and (x2.cur or 0) > 0 then
 				b.count:SetText("|cffff2020" .. x2.cur .. "|r")
 			end
-			b.data = { x = x2, tab = tab, gr = gr, level = L, live = isMine }
+			b.data = { x = x2, tab = tab, gr = gr, level = L, live = live }
 			b:SetScript("OnEnter", TalentEnter)
 		end
 	end
@@ -338,27 +460,70 @@ function ns.RenderTalents(lay, g, x, y, w)
 		if not found[ns.Key(r.name)] then missingNames[#missingNames + 1] = r.name end
 	end
 	local legend = "|cff" .. ns.Hex(C.gold) .. "Gold|r: full rank   |cff" .. ns.Hex(C.green) .. "Green|r: partial rank   Grey: not taken"
-	if isMine then legend = legend .. "   |cffff2020Red|r: points you have that the guide does not take" end
+	if live then legend = legend .. "   |cffff2020Red|r: points you have that the guide does not take" end
 	local _, h = lay:Text(ns.F.small, legend, x, y, w)
 	y = y + h + 6
 	if #missingNames > 0 then
-		_, h = lay:Text(ns.F.small, "|cffff8040Not found in " .. (isMine and "your client's" or "the cached") .. " trees: " .. table.concat(missingNames, ", ") .. ".|r", x, y, w)
+		local from = live and "your client's" or (source == "saved" and "the saved" or "the bundled")
+		_, h = lay:Text(ns.F.small, "|cffff8040Not found in " .. from .. " trees: " .. table.concat(missingNames, ", ") .. ".|r", x, y, w)
 		y = y + h + 6
 	end
-	if not isMine then
-		_, h = lay:Text(ns.F.small, ("Trees from the last time you logged in a %s. Apply build is available on a %s."):format(cls.name, cls.name), x, y, w)
+	if not live then
+		local note
+		if isMine then
+			note = "The game has not shared your talent trees yet, so these are the Forever trees saved with the addon. This page switches to your own trees by itself when the game provides them."
+			if source == "saved" then note = "The game has not shared your talent trees yet, so these are the trees saved from your last login. This page switches to your live trees by itself when the game provides them." end
+		elseif source == "saved" then
+			note = ("Trees from the last time you logged in a %s. Apply build is available on a %s."):format(cls.name, cls.name)
+		else
+			note = ("The Forever %s talent trees, saved with the addon. Apply build is available on a %s."):format(cls.name, cls.name)
+		end
+		_, h = lay:Text(ns.F.small, note, x, y, w)
 		y = y + h + 6
 	end
 	return y - y0 + 6
 end
 
--- Keep the cached trees and any open guide current.
+-- What the game reports about talents, for /sgg talents: enough to see why a tree did not load.
+function ns.TalentReport()
+	local key = PlayerClassKey()
+	local version
+	if C_AddOns and C_AddOns.GetAddOnMetadata then version = Call(C_AddOns.GetAddOnMetadata, "StandardsGuides", "Version")
+	elseif GetAddOnMetadata then version = Call(GetAddOnMetadata, "StandardsGuides", "Version") end
+	ns.Print(("Talent check: class %s, addon %s."):format(tostring(key), tostring(version or "?")))
+	local tabs = Num(Call(GetNumTalentTabs))
+	ns.Print(("The game reports %d talent tree(s). API: GetNumTalentTabs %s, GetTalentTabInfo %s, GetNumTalents %s, GetTalentInfo %s.")
+		:format(tabs, GetNumTalentTabs and "yes" or "NO", GetTalentTabInfo and "yes" or "NO", GetNumTalents and "yes" or "NO", GetTalentInfo and "yes" or "NO"))
+	for tab = 1, tabs do
+		local name = TabInfo(tab)
+		ns.Print(("  tree %d: %s, %d talents"):format(tab, tostring(name), Num(Call(GetNumTalents, tab))))
+	end
+	local live = ReadTree()
+	local _, token = UnitClass("player")
+	local saved = ns.db and ns.db.trees and token and ns.db.trees[token]
+	ns.Print(("Live trees whole: %s. Saved copy whole: %s. Bundled Forever trees: %s."):format(
+		TreeComplete(live, key) and "yes" or "no", TreeComplete(saved, key) and "yes" or "no", StaticTree(key) and "yes" or "not loaded (open your class guide first)"))
+	retry.tries = 0
+	Refresh(true)
+end
+
+-- Keep the saved trees and any open guide current. The game can hand over a new character's trees late, so
+-- besides the login events this also listens for talent and spell changes and looks again a few times.
 local ev = CreateFrame("Frame")
-ev:RegisterEvent("CHARACTER_POINTS_CHANGED")
-ev:RegisterEvent("PLAYER_ENTERING_WORLD")
-ev:SetScript("OnEvent", function()
-	if runner.busy then return end
-	ns.CacheTalentTrees()
-	local g = ns.main and ns.main.guide
-	if g and g:IsShown() and g.cls and g.cls.key == PlayerClassKey() then g:RerenderSoon() end
+local FORCE = { CHARACTER_POINTS_CHANGED = true, PLAYER_TALENT_UPDATE = true, ACTIVE_TALENT_GROUP_CHANGED = true, PLAYER_LEVEL_UP = true }
+for _, e in ipairs({ "CHARACTER_POINTS_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_TALENT_UPDATE", "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_LEVEL_UP", "SPELLS_CHANGED" }) do
+	pcall(ev.RegisterEvent, ev, e) -- an event this client does not have is skipped, not an error
+end
+local waiting
+ev:SetScript("OnEvent", function(_, event)
+	if event == "PLAYER_ENTERING_WORLD" then retry.tries = 0 end
+	if runner.busy or waiting then return end
+	waiting = true
+	local force = FORCE[event]
+	local function go()
+		waiting = false
+		if runner.busy then return end
+		if not Refresh(force) then ns.RetryTrees() end
+	end
+	if C_Timer and C_Timer.After then C_Timer.After(0.5, go) else go() end
 end)
