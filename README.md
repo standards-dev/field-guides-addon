@@ -65,6 +65,8 @@ Class artwork comes from the World of Warcraft Fan Site Kit.
 World of Warcraft® and Blizzard Entertainment® are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
 This addon is not associated with or endorsed by Blizzard Entertainment.
 
-## 1.7.0: Sunken Temple quests
+## 1.7.0: dungeon quests and pins
 
-Each class guide now lists its three Temple of Atal'Hakkar class-quest rewards (spec fit included), the quest-giver of the class chain appears in Quest Atlas, and `/sgg pins` lists all 22 quest givers (9 class chains, 13 entry/Stone Circle/Hakkar/Eranikus quests). Positions are community-reported zone-map coordinates, converted to map positions by the client; reward stats come from community sources and are not verified in Forever.
+- The nine Sunken Temple class-quest chains add three rewards per class (item ids and rarity from the DungeonJournal addon; stats and spec fit are community-reported and not verified in Forever).
+- `QuestPins.lua` lists all 271 dungeon quests above level 30 (every Forever dungeon), with levels, prerequisites, rewards and class restrictions, taken from the DungeonJournal addon 2.0.9. 180 of them have a map position and can be pinned.
+- `/sgg pins <text>` searches by dungeon, quest giver, reward or class (`/sgg pins blackrock`, `/sgg pins warlock`); `/sgg pin <quest>` opens the map there and sets the waypoint.

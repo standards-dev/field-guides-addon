@@ -467,19 +467,19 @@ SlashCmdList.STANDARDSGUIDES = function(msg)
 		if #list == 1 and cmd == "pin" then
 			ns.ShowQuestPin(list[1])
 		elseif #list == 0 then
-			ns.Print("No quest matches \"" .. arg .. "\". Try /sgg pins sunken, /sgg pins tanaris or /sgg pins hakkar.")
+			ns.Print("No quest matches \"" .. arg .. "\". Try /sgg pins sunken, /sgg pins blackrock or /sgg pins <class>.")
 		else
 			ns.Print(#list .. " quests" .. (arg ~= "" and (" match \"" .. arg .. "\"") or "") .. (cmd == "pin" and ": be more specific, then use /sgg pin <name>." or ":"))
 			for i, e in ipairs(list) do
-				if i > 14 then ns.Print("...") break end
-				ns.Print(("%s - %s%s%s"):format(e.q, e.npc, e.zn and (", " .. e.zn .. " " .. ("%.1f, %.1f"):format(e.zx, e.zy)) or "", e.faction and e.faction ~= "Both" and (" (" .. e.faction .. ")") or ""))
+				if i > 20 then ns.Print("...") break end
+				ns.Print(("%s (%s, level %s) - %s%s%s"):format(e.q, e.d or "", e.lv or "?", e.npc, (e.mid or e.zn) and "" or " [no map position]", e.faction and e.faction ~= "Both" and (" (" .. e.faction .. ")") or ""))
 			end
 		end
 	elseif cmd == "help" then
 		ns.Print("/sgg - open or close the hub   /sgg me - your class guide   /sgg <class> [spec] - open a guide")
 		ns.Print("/sgg scale 0.5-1.5   /sgg minimap - toggle the minimap button   /sgg reset - recentre the window")
 		ns.Print("/sgg perf - render time, shown widgets and memory   /sgg talents - what the game reports about your talent trees")
-		ns.Print("/sgg pins [text] - list the Sunken Temple quests   /sgg pin <quest or giver> - show a quest giver on the map and pin it")
+		ns.Print("/sgg pins [text] - list dungeon quests (by dungeon, giver, reward or class)   /sgg pin <quest or giver> - show a quest giver on the map and pin it")
 	elseif cmd and ns.Hub then
 		for _, c in ipairs(ns.Hub.classes) do
 			if c.key == cmd then

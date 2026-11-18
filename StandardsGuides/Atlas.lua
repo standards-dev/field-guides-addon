@@ -234,8 +234,19 @@ local function FindZoneMap(name)
 	return zoneMaps[name] or nil
 end
 
+local function ContOfInst(inst)
+	for _, ci in pairs(CONT) do if ci.inst == inst then return ci.map end end
+end
+
 local function ResolveZone(name, zx, zy)
-	local m = FindZoneMap(name)
+	local m
+	if type(name) == "number" then
+		-- a map id from the Dungeon Journal data
+		local ok, inst = pcall(C_Map.GetWorldPosFromMapPos, name, CreateVector2D(0.5, 0.5))
+		m = { name, ok and inst and ContOfInst(inst) or name }
+	else
+		m = FindZoneMap(name)
+	end
 	if not m or not zx or not zy or not CreateVector2D then return end
 	local zone, cont = m[1], m[2]
 	local px, py = zx / 100, zy / 100
@@ -325,17 +336,23 @@ function ns.FindQuestPins(text)
 	local out = {}
 	text = (text or ""):lower()
 	for _, e in ipairs(ns.QuestPins or {}) do
-		if text == "" or ("sunken temple atal'hakkar"):find(text, 1, true) or e.q:lower():find(text, 1, true) or e.npc:lower():find(text, 1, true) or (e.zn and e.zn:lower():find(text, 1, true)) then
+		if text == "" or e.q:lower():find(text, 1, true) or (e.d and e.d:lower():find(text, 1, true)) or (e.rw and e.rw:lower():find(text, 1, true)) or (e.cls and e.cls:lower():find(text, 1, true)) or e.npc:lower():find(text, 1, true) or (e.zn and e.zn:lower():find(text, 1, true)) then
 			out[#out + 1] = e
 		end
 	end
+	local exact = {}
+	for _, e in ipairs(out) do if e.q:lower() == text then exact[#exact + 1] = e end end
+	if #exact >= 1 and text ~= "" then return exact end
 	return out
 end
 
 function ns.ShowQuestPin(e)
 	local t = { title = "Quest: " .. e.q }
 	local sub = { e.npc }
-	if e.zn then
+	if e.mid and e.zx then
+		t.zn, t.zx, t.zy = e.mid, e.zx, e.zy
+		sub[#sub + 1] = MapName(e.mid)
+	elseif e.zn then
 		t.zn, t.zx, t.zy = e.zn, e.zx, e.zy
 		sub[#sub + 1] = e.zn
 	elseif e.d and ns.AtlasPlaces[e.d] then
@@ -344,6 +361,8 @@ function ns.ShowQuestPin(e)
 		sub[#sub + 1] = (d.z or "") .. " (" .. d.n .. ")"
 	end
 	if e.faction and e.faction ~= "Both" then sub[#sub + 1] = e.faction end
+	if e.cls then sub[#sub + 1] = e.cls .. " quest" end
+	if e.rw then sub[#sub + 1] = "Rewards: " .. e.rw end
 	local lv = Level(e)
 	if lv ~= "" then sub[#sub + 1] = lv:sub(4) end
 	if e.note then sub[#sub + 1] = e.note end
