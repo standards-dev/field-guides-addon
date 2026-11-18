@@ -67,7 +67,7 @@ This addon is not associated with or endorsed by Blizzard Entertainment.
 
 ## 1.7.1: item tables rebuilt
 
-- All item recommendations were rebuilt from the MetaForge Forever database (stats, quest rewards, drops, recipes), the Forever Dungeon Journal addon (boss loot) and the earlier Wowhead data. Dungeon drops, quest rewards and crafted gear are all included.
+- All item recommendations were rebuilt from the MetaForge Forever database (stats, quest rewards, drops, recipes), the Forever Dungeon Journal addon (boss loot). Dungeon drops, quest rewards and crafted gear are all included.
 - Each piece is matched to a specialization by that spec's stat priority, armor type and level range. Pieces whose stats are mostly wasted for a spec are no longer listed for it.
 - Every spec has its own gear brackets (best match per slot for each level range, and a Quest rewards list). Icons come from the game client by item id.
 - 500+ quest giver entries were added for the new quest rewards, and the `/sgg pins` fit lines are recalculated with the same stat-priority rules.
