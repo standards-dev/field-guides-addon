@@ -9,6 +9,7 @@
 
 HubData.lua
 QuestPins.lua
+QuestPinsWorld.lua
 Core.lua
 Widgets.lua
 Icons.lua

@@ -29,7 +29,7 @@ The guide content is written for Forever, so some talents and items will not exi
 | `/sgg perf` | Show render time, shown widgets and memory |
 | `/sgg scale 0.8` | Window scale (0.5–1.5) |
 | `/sgg minimap` | Show or hide the minimap button |
-| `/sgg pins` | List the Sunken Temple quest givers (`/sgg pins mage` filters) |
+| `/sgg pins` | List dungeon and open-world quests above level 30 (`/sgg pins mage` or `/sgg pins tanaris` filters) |
 | `/sgg pin <quest or npc>` | Open the map on the quest giver and set the map pin (waypoint) there |
 | `/sgg reset` | Re-centre the window |
 
@@ -69,4 +69,4 @@ This addon is not associated with or endorsed by Blizzard Entertainment.
 
 - The nine Sunken Temple class-quest chains add three rewards per class (item ids and rarity from the DungeonJournal addon; stats and spec fit are community-reported and not verified in Forever).
 - `QuestPins.lua` lists all 271 dungeon quests above level 30 (every Forever dungeon), with levels, prerequisites, rewards and class restrictions, taken from the DungeonJournal addon 2.0.9. 180 of them have a map position and can be pinned.
-- `/sgg pins <text>` searches by dungeon, quest giver, reward or class (`/sgg pins blackrock`, `/sgg pins warlock`); `/sgg pin <quest>` opens the map there and sets the waypoint.
+- `/sgg pins <text>` searches by dungeon, zone, quest giver, reward, class or spec (`/sgg pins blackrock`, `/sgg pins winterspring`, `/sgg pins warlock`). Open-world entries (506 quests with item rewards) show which classes and specs the reward items suit, worked out from item stats, not a ranking; `/sgg pin <quest>` opens the map there and sets the waypoint.

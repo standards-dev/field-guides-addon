@@ -335,8 +335,11 @@ end
 function ns.FindQuestPins(text)
 	local out = {}
 	text = (text or ""):lower()
-	for _, e in ipairs(ns.QuestPins or {}) do
-		if text == "" or e.q:lower():find(text, 1, true) or (e.d and e.d:lower():find(text, 1, true)) or (e.rw and e.rw:lower():find(text, 1, true)) or (e.cls and e.cls:lower():find(text, 1, true)) or e.npc:lower():find(text, 1, true) or (e.zn and e.zn:lower():find(text, 1, true)) then
+	local all = {}
+	for _, e in ipairs(ns.QuestPins or {}) do all[#all + 1] = e end
+	for _, e in ipairs(ns.QuestPinsWorld or {}) do all[#all + 1] = e end
+	for _, e in ipairs(all) do
+		if text == "" or e.q:lower():find(text, 1, true) or (e.fit and e.fit:lower():find(text, 1, true)) or (e.d and e.d:lower():find(text, 1, true)) or (e.rw and e.rw:lower():find(text, 1, true)) or (e.cls and e.cls:lower():find(text, 1, true)) or e.npc:lower():find(text, 1, true) or (e.zn and e.zn:lower():find(text, 1, true)) then
 			out[#out + 1] = e
 		end
 	end
@@ -363,6 +366,7 @@ function ns.ShowQuestPin(e)
 	if e.faction and e.faction ~= "Both" then sub[#sub + 1] = e.faction end
 	if e.cls then sub[#sub + 1] = e.cls .. " quest" end
 	if e.rw then sub[#sub + 1] = "Rewards: " .. e.rw end
+	if e.fit then sub[#sub + 1] = "Suits: " .. e.fit end
 	local lv = Level(e)
 	if lv ~= "" then sub[#sub + 1] = lv:sub(4) end
 	if e.note then sub[#sub + 1] = e.note end
