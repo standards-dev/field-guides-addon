@@ -2,7 +2,7 @@
 ## Title: Standards.gg Field Guides - Priest data
 ## Notes: Priest guide data for Standards.gg Field Guides. Loaded only when you open a Priest guide.
 ## Author: Standards.gg
-## Version: 1.15.2
+## Version: 1.7.0
 ## LoadOnDemand: 1
 ## Dependencies: StandardsGuides
 ## X-Credit: Source: Standards.gg Field Guides - https://standards.gg/field-guides/

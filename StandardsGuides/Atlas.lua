@@ -209,15 +209,55 @@ local function MapName(id)
 	return info and info.name
 end
 
--- t = { title, sub, c, x, y, noPos }
+-- A position given as a zone name and a zone map percentage (the form quest guides print, e.g. Azshara 42.4, 42.6).
+-- The client turns it into a map position, so no world coordinates are stored. Returns the same values as Resolve.
+local zoneMaps
+local function FindZoneMap(name)
+	if not (C_Map and C_Map.GetMapChildrenInfo and name) then return end
+	zoneMaps = zoneMaps or {}
+	if zoneMaps[name] ~= nil then return zoneMaps[name] or nil end
+	local want = name:lower()
+	local found, foundCont
+	for _, ci in pairs(CONT) do
+		local ok, list = pcall(C_Map.GetMapChildrenInfo, ci.map, nil, true)
+		if ok and type(list) == "table" then
+			for _, info in ipairs(list) do
+				if info.name and info.name:lower() == want and info.mapID then
+					-- prefer the zone map over a city or micro map that shares the name
+					if not found or info.mapType == 3 then found, foundCont = info.mapID, ci.map end
+				end
+			end
+		end
+		if found then break end
+	end
+	zoneMaps[name] = found and { found, foundCont } or false
+	return zoneMaps[name] or nil
+end
+
+local function ResolveZone(name, zx, zy)
+	local m = FindZoneMap(name)
+	if not m or not zx or not zy or not CreateVector2D then return end
+	local zone, cont = m[1], m[2]
+	local px, py = zx / 100, zy / 100
+	local cx, cy
+	if C_Map.GetWorldPosFromMapPos then
+		local ok, inst, wpos = pcall(C_Map.GetWorldPosFromMapPos, zone, CreateVector2D(px, py))
+		if ok and inst and wpos then cx, cy = MapPos(inst, wpos, cont) end
+	end
+	if not cx then return zone, px, py, zone, px, py end
+	return zone, px, py, cont, cx, cy
+end
+
+-- t = { title, sub, c, x, y } for world coordinates, or { title, sub, zn, zx, zy } for a zone name and percentages
 local function Show(t)
 	pop = pop or CreatePopup()
 	pop.title:SetText(t.title)
 	pop.sub:SetText(t.sub or "")
-	local zone, zx, zy, cont, cx, cy = Resolve(t.c, t.x, t.y)
+	local zone, zx, zy, cont, cx, cy
+	if t.zn then zone, zx, zy, cont, cx, cy = ResolveZone(t.zn, t.zx, t.zy) else zone, zx, zy, cont, cx, cy = Resolve(t.c, t.x, t.y) end
 	if not zone then
 		DrawMap(pop, nil)
-		pop.msg:SetText(t.x and "This client did not return a map position for these coordinates." or
+		pop.msg:SetText((t.x or t.zn) and ("This client did not return a map position for " .. (t.zn and (t.zn .. " " .. ("%.1f, %.1f"):format(t.zx or 0, t.zy or 0)) or "these coordinates") .. ".") or
 			"The Atlas does not have a map position for this yet.")
 		pop.coords:SetText("")
 		pop.zoneBtn:Hide(); pop.contBtn:Hide(); pop.worldBtn:Hide()
@@ -263,10 +303,49 @@ function ns.ShowQuestAtlas(cls, key)
 		if not d then return end
 		t.c, t.x, t.y = d.c, d.x, d.y
 		sub[#sub + 1] = e.npc .. " · " .. (d.z or "") .. " (" .. d.n .. ")"
+	elseif e.zn then
+		t.zn, t.zx, t.zy = e.zn, e.zx, e.zy
+		sub[#sub + 1] = e.npc .. " · " .. e.zn
 	else
 		t.c, t.x, t.y = e.c, e.x, e.y
 		sub[#sub + 1] = e.npc .. " · " .. (e.w or "")
 	end
+	if e.note then sub[#sub + 1] = e.note end
+	t.sub = table.concat(sub, " · ")
+	Show(t)
+end
+
+-- Quests found by name for /sgg pin (the Sunken Temple quest list in QuestPins.lua).
+local function Level(e)
+	if not e.lv then return "" end
+	return " · level " .. e.lv .. (e.from and (" (from " .. e.from .. ")") or "")
+end
+
+function ns.FindQuestPins(text)
+	local out = {}
+	text = (text or ""):lower()
+	for _, e in ipairs(ns.QuestPins or {}) do
+		if text == "" or ("sunken temple atal'hakkar"):find(text, 1, true) or e.q:lower():find(text, 1, true) or e.npc:lower():find(text, 1, true) or (e.zn and e.zn:lower():find(text, 1, true)) then
+			out[#out + 1] = e
+		end
+	end
+	return out
+end
+
+function ns.ShowQuestPin(e)
+	local t = { title = "Quest: " .. e.q }
+	local sub = { e.npc }
+	if e.zn then
+		t.zn, t.zx, t.zy = e.zn, e.zx, e.zy
+		sub[#sub + 1] = e.zn
+	elseif e.d and ns.AtlasPlaces[e.d] then
+		local d = ns.AtlasPlaces[e.d]
+		t.c, t.x, t.y = d.c, d.x, d.y
+		sub[#sub + 1] = (d.z or "") .. " (" .. d.n .. ")"
+	end
+	if e.faction and e.faction ~= "Both" then sub[#sub + 1] = e.faction end
+	local lv = Level(e)
+	if lv ~= "" then sub[#sub + 1] = lv:sub(4) end
 	if e.note then sub[#sub + 1] = e.note end
 	t.sub = table.concat(sub, " · ")
 	Show(t)
