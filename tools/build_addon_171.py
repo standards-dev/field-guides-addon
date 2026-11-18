@@ -77,6 +77,29 @@ def item_of(c):
     if m: d['qk'] = m.group(1).strip().lower()
     return d
 
+
+_KEEP = ('Quest level is not the minimum', 'Check recipe source and required profession', 'The item has no level requirement of its own', 'Some materials may only drop from raids', 'drop chance for', 'Check faction', 'Bind-on-pickup', 'Check prerequisites')
+def clean_lim(l):
+    if not l: return ''
+    out = []
+    m = re.search(r'Required station: ([^.]*?)\.?$', l)
+    if m and 'not specified' not in m.group(1): out.append('Requires ' + m.group(1).strip() + '.')
+    l2 = re.sub(r'Required station: [^.]*\.?', '', l)
+    if l2.startswith('Dungeon trash drop; no single mob'): return 'Dungeon trash drop; no single mob is listed.'
+    for sent in [x.strip() for x in re.split(r'(?<=\.)\s+', l2) if x.strip()]:
+        if any(k in sent for k in _KEEP): out.append(sent)
+    return ' '.join(out)
+def clean_item(d):
+    d.pop('e', None); d.pop('icon_url', None)
+    lim = clean_lim(d.get('li'))
+    if lim: d['li'] = lim
+    else: d.pop('li', None)
+    if isinstance(d.get('a'), str):
+        d['a'] = d['a'].replace(' listed chance', ' drop chance').replace('recipe source not listed', 'recipe source unknown')
+    if isinstance(d.get('tt'), list):
+        d['tt'] = [x.replace('Catalog snapshot: other Forever databases report', 'Another listing reports').replace('the catalog lists shield block on this bow', 'shield block is listed on this bow') if isinstance(x, str) else x for x in d['tt']]
+    return d
+
 stats = {}
 for cls, info in R.items():
     path = '%s/StandardsGuides_%s/Data.lua' % (ROOT, cls.capitalize())
@@ -92,6 +115,7 @@ for cls, info in R.items():
     for c in info['cards']:
         if c['kind'] not in ('dungeon', 'crafted'): continue
         items[c['key']] = item_of(c); newkeys[c['key']] = 1
+    for _v in items.values(): clean_item(_v)
     # quests: add giver entries that are not present yet
     oldq = {str(k) for k in old['quests'].keys()}
     addq = [(k, v) for k, v in info['Q'].items() if k not in oldq]

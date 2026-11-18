@@ -174,7 +174,7 @@ local function CardText(it, spec)
 		"|cffffffff" .. (it.a or "Acquisition unresolved") .. "|r",
 		Why(it, spec) or "Compare the tooltip with your current equipment.",
 	}
-	if it.k ~= "c" then parts[#parts + 1] = Badge(it.e) end
+	if it.k ~= "c" and it.e then parts[#parts + 1] = Badge(it.e) end
 	text = table.concat(parts, "\n")
 	bySpec[spec] = text
 	return text

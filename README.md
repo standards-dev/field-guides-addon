@@ -71,6 +71,7 @@ This addon is not associated with or endorsed by Blizzard Entertainment.
 - Each piece is matched to a specialization by that spec's stat priority, armor type and level range. Pieces whose stats are mostly wasted for a spec are no longer listed for it.
 - Every spec has its own gear brackets (best match per slot for each level range, and a Quest rewards list). Icons come from the game client by item id.
 - 500+ quest giver entries were added for the new quest rewards, and the `/sgg pins` fit lines are recalculated with the same stat-priority rules.
+- Item cards no longer carry source or evidence lines.
 - Not tested in game; spec fit is worked out from stats and is not verified in Forever.
 
 ## 1.7.0: dungeon quests and pins
