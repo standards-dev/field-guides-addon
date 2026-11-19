@@ -108,7 +108,7 @@ function ns.ShowItemTooltip(owner, it, spec)
 	if it.sk then GameTooltip:AddLine("Crafting / use skill: " .. it.sk, 1, 1, 1, true) end
 	if it.m then GameTooltip:AddLine("Materials: " .. it.m, C.text[1], C.text[2], C.text[3], true) end
 	if it.e then GameTooltip:AddLine(it.e, C.gold[1], C.gold[2], C.gold[3], true) end
-	GameTooltip:AddLine(it.a or "Acquisition unresolved", C.text[1], C.text[2], C.text[3], true)
+	GameTooltip:AddLine(it.a or "Acquisition unknown", C.text[1], C.text[2], C.text[3], true)
 	if it.li then GameTooltip:AddLine(it.li, C.muted[1], C.muted[2], C.muted[3], true) end
 	if not link and it.id then
 		if pendingItems[it.id] == "missing" then
@@ -166,12 +166,12 @@ local function CardText(it, spec)
 	if text then return text end
 	local q = ns.Quality(it.q)
 	local meta = q[1] .. " · " .. (it.s or it.p or "Item") .. " · " ..
-		(it.rl and ("Requires level " .. it.rl) or "Level requirement unresolved") ..
+		(it.rl and ("Requires level " .. it.rl) or "Level unknown") ..
 		(it.hl and (" · Hunter use: " .. it.hl .. "+") or "")
 	local parts = {
 		"|cff" .. q[2] .. it.n .. "|r",
 		"|cff" .. MUTED_HEX .. meta .. "|r",
-		"|cffffffff" .. (it.a or "Acquisition unresolved") .. "|r",
+		"|cffffffff" .. (it.a or "Acquisition unknown") .. "|r",
 		Why(it, spec) or "Compare the tooltip with your current equipment.",
 	}
 	if it.k ~= "c" and it.e then parts[#parts + 1] = Badge(it.e) end
@@ -349,9 +349,9 @@ function ns.RenderLoot(lay, g, x, y, w)
 			end)
 			local open = g.open[d.n] or q ~= ""
 			-- header
-			local badge = Badge(not d.ba and "Not yet confirmed" or (#all > 0 and "Beta dungeon · listed items" or "Beta dungeon · data incomplete"))
+			local badge = ""
 			local head = "|cff" .. ns.Hex(C.gold) .. (open and "-  " or "+  ") .. d.n .. "|r   " .. badge ..
-				"   |cff" .. ns.Hex(C.muted) .. (d.lr or "Level range unresolved") .. " · " .. #all .. " relevant records|r"
+				"   |cff" .. ns.Hex(C.muted) .. (d.lr or "Level range unknown") .. " · " .. #all .. " relevant records|r"
 			local fs, hh = lay:Text(ns.F.body, head, x + 10, y + 9, w - 110)
 			local hH = math.max(30, hh + 16)
 			lay:Box(x, y, w, hH, open and C.panel2 or ns.C.panel)
@@ -405,7 +405,7 @@ function ns.RenderCraft(lay, g, x, y, w)
 	local search = SearchBox(g, "craft", "Search craft, profession, benefit or material...", 280)
 	lay:Place(search, x, y)
 	local bopts = { { "all", "All brackets" } }
-	for _, b in ipairs(BRACKETS) do bopts[#bopts + 1] = { b, b == "unknown" and "Requirement unresolved" or b } end
+	for _, b in ipairs(BRACKETS) do bopts[#bopts + 1] = { b, b == "unknown" and "Level unknown" or b } end
 	local br = Cycle(lay, g, "craftBracket", x + 290, y, 190, "Level", bopts)
 	local profs, seen = { { "all", "All professions" } }, {}
 	local plist = {}
@@ -434,7 +434,7 @@ function ns.RenderCraft(lay, g, x, y, w)
 				if (a.rl or 99) ~= (c.rl or 99) then return (a.rl or 99) < (c.rl or 99) end
 				return a.n < c.n
 			end)
-			local _, h = lay:Text(ns.F.h3, b == "unknown" and "Requirement unresolved" or ("Levels " .. b), x, y, w)
+			local _, h = lay:Text(ns.F.h3, b == "unknown" and "Level unknown" or ("Levels " .. b), x, y, w)
 			y = y + h + 8
 			for _, it in ipairs(list) do y = y + ns.ItemCard(lay, x, y, w, it, g.spec, g) + 6 end
 			y = y + 8
@@ -510,7 +510,7 @@ function ns.RenderProfessions(lay, g, x, y, w)
 end
 
 function ns.RenderRarity(lay, g, x, y, w)
-	local t = "|cffffffffCommon|r    |cff1eff00Uncommon|r    |cff0070ddRare|r    |cffa335eeEpic|r    |cff808080Unverified rarity|r"
+	local t = "|cffffffffCommon|r    |cff1eff00Uncommon|r    |cff0070ddRare|r    |cffa335eeEpic|r    "
 	local _, h = lay:Text(ns.F.body, t, x, y, w)
 	return h + 10
 end

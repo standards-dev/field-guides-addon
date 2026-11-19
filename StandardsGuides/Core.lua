@@ -36,7 +36,7 @@ ns.QUALITY = {
 	[0] = { "Poor", "9d9d9d" }, [1] = { "Common", "ffffff" }, [2] = { "Uncommon", "1eff00" },
 	[3] = { "Rare", "0070dd" }, [4] = { "Epic", "a335ee" }, [5] = { "Legendary", "ff8000" },
 }
-ns.UNKNOWN_QUALITY = { "Rarity unverified", "808080" }
+ns.UNKNOWN_QUALITY = { "Item", "808080" }
 
 -- ------------------------------------------------------------------ fonts (the site's Cinzel and Inter, shipped with the addon)
 local FONT_DIR = "Interface\\AddOns\\StandardsGuides\\Fonts\\"
