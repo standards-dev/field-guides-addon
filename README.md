@@ -1,11 +1,11 @@
 # Standards.gg Field Guides — WoW Forever addon
 
-The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.7.1) inside World of Warcraft: Forever.
+The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.7.2) inside World of Warcraft: Forever.
 All nine classes and 28 specializations, with talent builds, leveling routes, stat priorities, rotations, macros, the dungeon loot atlas, professions, crafts and quest gear.
 
 ## Download
 
-Get **`StandardsGuides-Forever-1.7.1-addon.zip`** from the [Releases](../../releases) page.
+Get **`StandardsGuides-Forever-1.7.2-addon.zip`** from the [Releases](../../releases) page.
 
 ## Install
 
@@ -64,6 +64,11 @@ Fonts: Cinzel and Inter, used under the SIL Open Font License 1.1. The license t
 Class artwork comes from the World of Warcraft Fan Site Kit.
 World of Warcraft® and Blizzard Entertainment® are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
 This addon is not associated with or endorsed by Blizzard Entertainment.
+
+## 1.7.2: new dungeons and class filters
+- Blackmaw Hold, Shaper's Terrace, Hall of Thanes, Ruins of Lordaeron, Excavation Site: Wetlands, City of Dalaran, The Drowned City, Krol'dok Stronghold and Alcaz Prison list all drops and dungeon-quest rewards that fit each spec's stat priority, plus trash and mob drops and 97 more quest rewards from the Dungeon Journal.
+- No off-hands or shields for Hunters, no spell power or healing gear on physical specs, no melee or healing-only gear on casters, and weapons limited to each class's proficiencies.
+- Item lines are shorter ("Gives +8 Agility, ...") and source or method text is gone.
 
 ## 1.7.1: item tables rebuilt
 
