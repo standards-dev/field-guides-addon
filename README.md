@@ -1,11 +1,11 @@
 # Standards.gg Field Guides — WoW Forever addon
 
-The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.7.4) inside World of Warcraft: Forever.
+The [Standards.gg Field Guides](https://standards.gg/field-guides/) (version 1.7.5) inside World of Warcraft: Forever.
 All nine classes and 28 specializations, with talent builds, leveling routes, stat priorities, rotations, macros, the dungeon loot atlas, professions, crafts and quest gear.
 
 ## Download
 
-Get **`StandardsGuides-Forever-1.7.4-addon.zip`** from the [Releases](../../releases) page.
+Get **`StandardsGuides-Forever-1.7.5-addon.zip`** from the [Releases](../../releases) page.
 
 ## Install
 
@@ -64,6 +64,10 @@ Fonts: Cinzel and Inter, used under the SIL Open Font License 1.1. The license t
 Class artwork comes from the World of Warcraft Fan Site Kit.
 World of Warcraft® and Blizzard Entertainment® are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
 This addon is not associated with or endorsed by Blizzard Entertainment.
+
+## 1.7.5: version aligned with the plugin
+
+No data changes. Plugin 1.7.5 adds quest objectives and Start / Turn in / Item locations Atlas buttons to the Tier 0.5 questline in every website guide.
 
 ## 1.7.4: version aligned with the plugin
 
